@@ -16,7 +16,7 @@ typedef struct dlist
     struct dlist_node* left;
     struct dlist_node* right;
     size_t size;
-    void (*free_data)(void*);
+    void (*free_data_function)(void*);
 } dlist_t;
 
 dlist_node_t* dlist_node_init(void* data);
@@ -26,6 +26,9 @@ dlist_t* dlist_init(void (*free_data)(void*));
 uint16_t dlist_push_back(dlist_t* list, void* data);
 uint16_t dlist_remove_node(dlist_t* list, void* data);
 uint16_t dlist_push_front(dlist_t* list, void* data);
+uint16_t dlist_contains(dlist_t* list, void* data);
+void dlist_reverse(dlist_t* list);
+void dlist_sort(dlist_t* list, int (*comparator)(const void* , const void* ));
 void dlist_free(dlist_t* list);
 
 #endif
