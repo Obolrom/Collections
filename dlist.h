@@ -28,7 +28,8 @@ uint16_t dlist_remove_node(dlist_t* list, void* data);
 uint16_t dlist_push_front(dlist_t* list, void* data);
 uint16_t dlist_contains(dlist_t* list, void* data);
 void dlist_reverse(dlist_t* list);
-void dlist_sort(dlist_t* list, int (*comparator)(const void* , const void* ));
+void dlist_sort(dlist_t* list, int (*comparator)(const void* , const void* )); // -
+void dlist_print(dlist_t* list, void (*presenter)(void*));
 void dlist_free(dlist_t* list);
 
 #endif

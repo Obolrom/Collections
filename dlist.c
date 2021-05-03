@@ -80,25 +80,40 @@ uint16_t dlist_push_front(dlist_t* list, void* data)
 
 static void dlist_remove_left(dlist_t* list)
 {
-    // todo check for 3 cases
-    //    1) if only 1 element
-    //    2) if 2 elements
-    //    3) 2+ elements
-//    dlist_node_t* for_deletion;
-//
-//    for_deletion = list->left;
-//    if (list->size > 0)
-//    {
-//        list->left = list->left->next;
-//        list->left->prev = NULL;
-//    }
-//    else
-//    {
-//        list->left = NULL;
-//        list->right = NULL;
-//    }
-//    dlist_node_free(for_deletion, NULL);
-//    list->size--;
+    dlist_node_t* for_deletion;
+
+    for_deletion = list->left;
+    if (list->size == 1)
+    {
+        list->left = NULL;
+        list->right = NULL;
+    }
+    else
+    {
+        list->left = list->left->next;
+        list->left->prev = NULL;
+    }
+    dlist_node_free(for_deletion, list->free_data_function);
+    list->size--;
+}
+
+static void dlist_remove_right(dlist_t* list)
+{
+    dlist_node_t* for_deletion;
+
+    for_deletion = list->right;
+    if (list->size == 1)
+    {
+        list->left = NULL;
+        list->right = NULL;
+    }
+    else
+    {
+        list->right = list->right->prev;
+        list->right->next = NULL;
+    }
+    dlist_node_free(for_deletion, list->free_data_function);
+    list->size--;
 }
 
 static dlist_node_t* find_node(dlist_t* list, void* data)
@@ -106,7 +121,7 @@ static dlist_node_t* find_node(dlist_t* list, void* data)
     dlist_node_t* searchable_node = NULL;
 
     for (dlist_node_t* current = list->left;
-            current != list->right->next;
+            current != NULL;
             current = current->next)
     {
         if (current->data == data)
@@ -119,22 +134,57 @@ static dlist_node_t* find_node(dlist_t* list, void* data)
     return searchable_node;
 }
 
+static void dlist_remove_except_left_and_right(dlist_t* list, dlist_node_t* for_deletion)
+{
+    dlist_node_t* previous = for_deletion->prev;
+    dlist_node_t* next = for_deletion->next;
+    previous->next = next;
+    next->prev = previous;
+    dlist_node_free(for_deletion, list->free_data_function);
+    list->size--;
+}
+
 uint16_t dlist_remove_node(dlist_t* list, void* data)
 {
     if (list == NULL) return 0;
 
     dlist_node_t* for_removing = find_node(list, data);
-
     if (for_removing == NULL) return 0;
 
-    // todo check if 'left', 'right', or another
     if (for_removing == list->left)
     {
         dlist_remove_left(list);
         return 1;
     }
+    else if (for_removing == list->right)
+    {
+        dlist_remove_right(list);
+        return 1;
+    }
+    dlist_remove_except_left_and_right(list, for_removing);
+    return 1;
+}
 
-    return 0;
+void dlist_reverse(dlist_t* list)
+{
+    if (list == NULL)return;
+
+    dlist_node_t* temp = NULL;
+    dlist_node_t* old_left = list->left;
+    dlist_node_t* new_left = list->right;
+    dlist_node_t* new_right = old_left;
+
+    for (dlist_node_t* current = list->left;
+            current != NULL;
+            current = current->prev)
+    {
+        temp = current->prev;
+        current->prev = current->next;
+        current->next = temp;
+    }
+
+    list->left = new_left;
+    list->right = new_right;
 }
 
 uint16_t dlist_contains(dlist_t* list, void* data)
@@ -142,12 +192,24 @@ uint16_t dlist_contains(dlist_t* list, void* data)
     return find_node(list, data) != NULL;
 }
 
+void dlist_print(dlist_t* list, void (*presenter)(void*))
+{
+    dlist_node_t* current = list->left;
+    while (current != NULL)
+    {
+        presenter(current->data);
+        current = current->next;
+    }
+}
+
 void dlist_free(dlist_t* list)
 {
     if (list == NULL) return;
 
     dlist_node_t* for_deletion;
-    for (dlist_node_t* current = list->left; current != list->right->next; )
+    for (dlist_node_t* current = list->left;
+         current != NULL;
+         current = current->next)
     {
         for_deletion = current;
         current = current->next;
